@@ -1,0 +1,66 @@
+services:
+    # ─────────────────────────────────────────────────────────────────────────
+    # TEI — Text Embeddings Inference (HuggingFace)
+    # Serves BAAI/bge-m3: dense (/embed) + sparse (/embed_sparse) over HTTP.
+    # GPU memory: ~3 GB for bge-m3 in float16.
+    # Adjust --gpu-memory-utilization in vLLM / OLLAMA_GPU_MEMORY_FRACTION in
+    # Ollama (docker-compose.models.yml) to leave room for this container.
+    # ─────────────────────────────────────────────────────────────────────────
+    tei:
+        image: ghcr.io/huggingface/text-embeddings-inference:1.5
+        container_name: tei
+        restart: unless-stopped
+        command: --model-id BAAI/bge-m3 --port 8080 --dtype float16
+        ports:
+            - "8080:8080"
+        volumes:
+            - tei_cache:/data
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
+        healthcheck:
+            test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 120s
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # docling-serve — document parsing & OCR
+    # Handles PDF (layout + scanned), DOCX, XLSX, images.
+    # GPU accelerates OCR and layout models significantly.
+    # API: POST /v1alpha/convert/source  →  markdown output
+    # ─────────────────────────────────────────────────────────────────────────
+    docling:
+        image: ghcr.io/ds4sd/docling-serve:latest
+        container_name: docling
+        restart: unless-stopped
+        ports:
+            - "5001:5001"
+        environment:
+            - DOCLING_SERVE_ENABLE_UI=false
+        volumes:
+            - docling_cache:/root/.cache
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
+        healthcheck:
+            test: ["CMD", "curl", "-sf", "http://localhost:5001/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 180s
+
+volumes:
+    tei_cache:
+        driver: local
+    docling_cache:
+        driver: local
