@@ -1,0 +1,131 @@
+services:
+    # ─────────────────────────────────────────────
+    # vLLM — Qwen3-14B-AWQ
+    # ─────────────────────────────────────────────
+    # vllm:
+    #     image: vllm/vllm-openai:latest
+    #     container_name: vllm
+    #     restart: unless-stopped
+    #     environment:
+    #         - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+    #     volumes:
+    #         - vllm_hf_cache:/root/.cache/huggingface
+    #     ports:
+    #         - "8000:8000"
+    #     command: >
+    #         --model Qwen/Qwen3-14B-AWQ
+    #         --port 8000
+    #         --dtype float16
+    #         --max-model-len 8192
+    #         --gpu-memory-utilization 0.55
+    #         --enforce-eager
+    #         --trust-remote-code
+    #         --enable-auto-tool-choice
+    #         --tool-call-parser hermes
+    #     deploy:
+    #         resources:
+    #             reservations:
+    #                 devices:
+    #                     - driver: nvidia
+    #                       capabilities: [gpu]
+    #     healthcheck:
+    #         test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    #         interval: 30s
+    #         timeout: 10s
+    #         retries: 5
+    #         start_period: 120s
+
+    # ─────────────────────────────────────────────
+    # Ollama — Qwen3-14B (temporary, replaces vLLM)
+    # ─────────────────────────────────────────────
+    ollama:
+        image: ollama/ollama:latest
+        container_name: ollama
+        restart: unless-stopped
+        environment:
+            - OLLAMA_KEEP_ALIVE=-1 # keep model in VRAM permanently
+            - OLLAMA_GPU_MEMORY_FRACTION=0.55 # leave room for Speaches
+        volumes:
+            - ollama_data:/root/.ollama
+        ports:
+            - "11434:11434"
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          capabilities: [gpu]
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+            interval: 30s
+            timeout: 10s
+            retries: 10
+            start_period: 30s
+
+    # Pull Qwen3-14B on first start
+    ollama-pull:
+        image: ollama/ollama:latest
+        container_name: ollama-pull
+        restart: no
+        entrypoint: ["/bin/sh", "-c", "ollama pull qwen3:14b"]
+        environment:
+            - OLLAMA_HOST=http://ollama:11434
+        depends_on:
+            ollama:
+                condition: service_healthy
+
+    # ─────────────────────────────────────────────
+    # Speaches — Whisper turbo
+    # ─────────────────────────────────────────────
+    speaches:
+        image: ghcr.io/speaches-ai/speaches:latest-cuda
+        container_name: speaches
+        restart: unless-stopped
+        environment:
+            - WHISPER__TTL=-1
+            - WHISPER__INFERENCE_DEVICE=cuda
+            - WHISPER__COMPUTE_TYPE=float16
+        volumes:
+            - speaches_hf_cache:/home/ubuntu/.cache/huggingface/hub
+        ports:
+            - "8014:8000"
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          capabilities: [gpu]
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    # Pull Whisper models on first start
+    speaches-pull:
+        image: ghcr.io/speaches-ai/speaches:latest-cuda
+        container_name: speaches-pull
+        restart: no
+        entrypoint:
+            - /bin/sh
+            - -c
+            - |
+                echo "Pulling deepdml/faster-whisper-large-v3-turbo-ct2..." && \
+                curl -sf -X POST "http://speaches:8000/v1/models/deepdml%2Ffaster-whisper-large-v3-turbo-ct2" && \
+                echo "Pulling Systran/faster-whisper-large-v3..." && \
+                curl -sf -X POST "http://speaches:8000/v1/models/Systran%2Ffaster-whisper-large-v3" && \
+                echo "Pulling ytrbqrkflbvbhy/whisper-podlodka-turbo-ct2-float16..." && \
+                curl -sf -X POST "http://speaches:8000/v1/models/ytrbqrkflbvbhy%2Fwhisper-podlodka-turbo-ct2-float16" && \
+                echo "All models pulled successfully."
+        depends_on:
+            speaches:
+                condition: service_healthy
+
+volumes:
+    # vllm_hf_cache:
+    #     driver: local
+    ollama_data:
+        driver: local
+    speaches_hf_cache:
+        driver: local

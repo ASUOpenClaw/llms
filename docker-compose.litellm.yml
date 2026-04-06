@@ -1,0 +1,59 @@
+services:
+    # ─────────────────────────────────────────────
+    # PostgreSQL — LiteLLM admin UI persistence
+    # ─────────────────────────────────────────────
+    postgres:
+        image: postgres:16-alpine
+        container_name: litellm-postgres
+        restart: unless-stopped
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER:-litellm}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+            - POSTGRES_DB=${POSTGRES_DB:-litellm}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U ${POSTGRES_USER:-litellm} -d ${POSTGRES_DB:-litellm}",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+
+    # ─────────────────────────────────────────────
+    # LiteLLM — unified proxy + admin UI
+    # ─────────────────────────────────────────────
+    litellm:
+        image: ghcr.io/berriai/litellm:main-latest
+        container_name: litellm
+        restart: unless-stopped
+        volumes:
+            - ./litellm_config.yaml:/app/config.yaml:ro
+        ports:
+            - "4000:4000"
+        command: ["--config", "/app/config.yaml", "--port", "4000"]
+        environment:
+            - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:?LITELLM_MASTER_KEY is required}
+            - LITELLM_SALT_KEY=${LITELLM_SALT_KEY:?LITELLM_SALT_KEY is required}
+            - DATABASE_URL=postgresql://${POSTGRES_USER:-litellm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-litellm}
+            - VLLM_HOST=${VLLM_HOST}
+            - SPEACHES_HOST=${SPEACHES_HOST}
+            # Admin UI credentials
+            - UI_USERNAME=${UI_USERNAME:-admin}
+            - UI_PASSWORD=${UI_PASSWORD:?UI_PASSWORD is required}
+        depends_on:
+            postgres:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+volumes:
+    postgres_data:
+        driver: local
