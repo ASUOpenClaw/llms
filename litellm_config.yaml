@@ -1,4 +1,22 @@
 model_list:
+    # ── Gemma 4 via Ollama (alternative to Qwen3) ──────────────────────────
+    # Gemma 4 12B — lighter (~7-8 GB VRAM Q4_K_M), good tool calling
+    # - model_name: gemma4-12b
+    #   litellm_params:
+    #       model: ollama/gemma4:12b
+    #       api_base: http://${OLLAMA_HOST}:11434
+    #   model_info:
+    #       mode: chat
+
+    # Gemma 4 27B Q4 — stronger reasoning (~14-16 GB VRAM)
+    # - model_name: gemma4-27b
+    #   litellm_params:
+    #       model: ollama/gemma4:27b-it-q4_K_M
+    #       api_base: http://${OLLAMA_HOST}:11434
+    #   model_info:
+    #       mode: chat
+
+    # ── Qwen3-14B via vLLM on GPU server ───────────────────────────────────
     # Qwen3-14B via vLLM on GPU server
     # - model_name: qwen3-14b
     #   litellm_params:
