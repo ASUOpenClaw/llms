@@ -1,42 +1,47 @@
 model_list:
-    # ── Gemma 4 via Ollama (alternative to Qwen3) ──────────────────────────
-    # Gemma 4 12B — lighter (~7-8 GB VRAM Q4_K_M), good tool calling
-    # - model_name: gemma4-12b
-    #   litellm_params:
-    #       model: ollama/gemma4:12b
-    #       api_base: http://${OLLAMA_HOST}:11434
-    #   model_info:
-    #       mode: chat
-
-    # Gemma 4 27B Q4 — stronger reasoning (~14-16 GB VRAM)
-    # - model_name: gemma4-27b
-    #   litellm_params:
-    #       model: ollama/gemma4:27b-it-q4_K_M
-    #       api_base: http://${OLLAMA_HOST}:11434
-    #   model_info:
-    #       mode: chat
-
-    # ── Qwen3-14B via vLLM on GPU server ───────────────────────────────────
-    # Qwen3-14B via vLLM on GPU server
-    # - model_name: qwen3-14b
-    #   litellm_params:
-    #       model: openai/qwen3-14b-awq
-    #       api_base: http://${VLLM_HOST}:8000/v1
-    #       api_key: none
-    #   model_info:
-    #       mode: chat
-
-    # Qwen3-14B via Ollama on GPU server
-    - model_name: qwen3-14b
+    # ── Gemma4 31B cloud via Ollama on GPU server ──────────────────────────
+    - model_name: gemma4:31b-cloud
       litellm_params:
-          model: ollama/qwen3:14b
+          model: ollama/gemma4:31b-cloud
           api_base: http://158.160.62.230:11434
-          extra_body:
-              think: true
       model_info:
           mode: chat
 
-    # Whisper turbo via Speaches on GPU server (STT)
+    # ── Qwen3.5 cloud via Ollama on GPU server ─────────────────────────────
+    - model_name: qwen3.5:cloud
+      litellm_params:
+          model: ollama/qwen3.5:cloud
+          api_base: http://158.160.62.230:11434
+      model_info:
+          mode: chat
+
+    # ── Qwen3.5 9B (local) via Ollama on GPU server ───────────────────────
+    - model_name: qwen3.5-9b
+      litellm_params:
+          model: ollama/qwen3.5:9b
+          api_base: http://158.160.62.230:11434
+      model_info:
+          mode: chat
+
+    # ── GLM-5.1 cloud via Ollama on GPU server ─────────────────────────────
+    - model_name: glm-5.1:cloud
+      litellm_params:
+          model: ollama/glm-5.1:cloud
+          api_base: http://158.160.62.230:11434
+      model_info:
+          mode: chat
+
+    # ── Text embeddings via Ollama (Qwen3-Embedding-0.6B, dense, 1024-dim) ─
+    # Used by GoClaw memory system and RAG (parser + rag service).
+    # MTEB rank #4, same family as Qwen LLMs. Pulled by ollama-pull-embedding.
+    - model_name: text-embedding-qwen3
+      litellm_params:
+          model: ollama/qwen3-embedding:0.6b
+          api_base: http://158.160.62.230:11434
+      model_info:
+          mode: embedding
+
+    # ── Whisper via Speaches on GPU server (STT) ───────────────────────────
     - model_name: whisper
       litellm_params:
           model: openai/whisper-1
@@ -45,9 +50,7 @@ model_list:
       model_info:
           mode: audio_transcription
 
-    # Kokoro TTS via Speaches on GPU server (TTS)
-    # Speaches /v1/audio/speech — OpenAI-compatible, mp3/wav only (no opus).
-    # GoClaw routes "tts" model here; Edge TTS is configured as fallback for Telegram (opus).
+    # ── Kokoro TTS via Speaches ────────────────────────────────────────────
     - model_name: tts
       litellm_params:
           model: openai/speaches-ai/Kokoro-82M-v1.0-ONNX

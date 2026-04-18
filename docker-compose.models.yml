@@ -56,7 +56,8 @@ services:
                         - driver: nvidia
                           capabilities: [gpu]
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+            # ollama CLI is in the image; curl/wget are not
+            test: ["CMD", "ollama", "list"]
             interval: 30s
             timeout: 10s
             retries: 10
@@ -68,6 +69,18 @@ services:
         container_name: ollama-pull
         restart: no
         entrypoint: ["/bin/sh", "-c", "ollama pull qwen3:14b"]
+        environment:
+            - OLLAMA_HOST=http://ollama:11434
+        depends_on:
+            ollama:
+                condition: service_healthy
+
+    # Pull Qwen3-Embedding-0.6B on first start (1024-dim dense embeddings)
+    ollama-pull-embedding:
+        image: ollama/ollama:latest
+        container_name: ollama-pull-embedding
+        restart: no
+        entrypoint: ["/bin/sh", "-c", "ollama pull qwen3-embedding:0.6b"]
         environment:
             - OLLAMA_HOST=http://ollama:11434
         depends_on:
@@ -102,7 +115,7 @@ services:
             retries: 3
             start_period: 60s
 
-    # Pull Whisper models on first start
+    # Pull Whisper (STT) and Kokoro (TTS) models on first start
     speaches-pull:
         image: ghcr.io/speaches-ai/speaches:latest-cuda
         container_name: speaches-pull
@@ -117,6 +130,8 @@ services:
                 curl -sf -X POST "http://speaches:8000/v1/models/Systran%2Ffaster-whisper-large-v3" && \
                 echo "Pulling ytrbqrkflbvbhy/whisper-podlodka-turbo-ct2-float16..." && \
                 curl -sf -X POST "http://speaches:8000/v1/models/ytrbqrkflbvbhy%2Fwhisper-podlodka-turbo-ct2-float16" && \
+                echo "Pulling speaches-ai/Kokoro-82M-v1.0-ONNX (TTS)..." && \
+                curl -sf -X POST "http://speaches:8000/v1/models/speaches-ai%2FKokoro-82M-v1.0-ONNX" && \
                 echo "All models pulled successfully."
         depends_on:
             speaches:
