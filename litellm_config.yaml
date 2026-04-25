@@ -34,9 +34,23 @@ model_list:
     # ── Text embeddings via Ollama (Qwen3-Embedding-0.6B, dense, 1024-dim) ─
     # Used by GoClaw memory system and RAG (parser + rag service).
     # MTEB rank #4, same family as Qwen LLMs. Pulled by ollama-pull-embedding.
+    # - model_name: text-embedding-qwen3
+    #   litellm_params:
+    #       model: ollama/qwen3-embedding:0.6b
+    #       api_base: http://158.160.62.230:11434
+    #   model_info:
+    #       mode: embedding
+
     - model_name: text-embedding-qwen3
       litellm_params:
-          model: ollama/qwen3-embedding:0.6b
+          model: ollama/qwen3-embedding:4b
+          api_base: http://158.160.62.230:11434
+      model_info:
+          mode: embedding
+
+    - model_name: nomic-embed-text
+      litellm_params:
+          model: ollama/nomic-embed-text:v1.5
           api_base: http://158.160.62.230:11434
       model_info:
           mode: embedding
