@@ -98,23 +98,23 @@ services:
     # Speaches — Whisper turbo
     # ─────────────────────────────────────────────
     speaches:
-        image: ghcr.io/speaches-ai/speaches:latest-cuda
+        image: ghcr.io/speaches-ai/speaches:latest-cpu # latest-cuda
         container_name: speaches
         restart: unless-stopped
         environment:
             - WHISPER__TTL=-1
-            - WHISPER__INFERENCE_DEVICE=cuda
-            - WHISPER__COMPUTE_TYPE=float16
+            # - WHISPER__INFERENCE_DEVICE=cuda
+            # - WHISPER__COMPUTE_TYPE=float16
         volumes:
             - speaches_hf_cache:/home/ubuntu/.cache/huggingface/hub
         ports:
             - "8014:8000"
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                        - driver: nvidia
-                          capabilities: [gpu]
+        # deploy:
+        #     resources:
+        #         reservations:
+        #             devices:
+        #                 - driver: nvidia
+        #                   capabilities: [gpu]
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
             interval: 30s
@@ -124,7 +124,7 @@ services:
 
     # Pull Whisper (STT) and Kokoro (TTS) models on first start
     speaches-pull:
-        image: ghcr.io/speaches-ai/speaches:latest-cuda
+        image: ghcr.io/speaches-ai/speaches:latest-cpu
         container_name: speaches-pull
         restart: no
         entrypoint:
