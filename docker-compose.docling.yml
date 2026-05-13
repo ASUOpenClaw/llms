@@ -13,17 +13,9 @@ services:
             - "5001:5001"
         environment:
             - DOCLING_SERVE_ENABLE_UI=true
-            - NVIDIA_VISIBLE_DEVICES=all
+            - DOCLING_SERVE_API_KEY=${BACKEND_API_KEY}
         volumes:
             - docling_cache:/root/.cache
-        # deploy:
-        #     resources:
-        #         reservations:
-        #             devices:
-        #                 - driver: nvidia
-        #                   count: 1
-        #                   capabilities: [gpu]
-        runtime: nvidia
         healthcheck:
             test: ["CMD", "curl", "-sf", "http://localhost:5001/health"]
             interval: 30s

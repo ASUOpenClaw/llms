@@ -1,0 +1,6 @@
+FROM python:3.11-slim
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir fastapi "uvicorn[standard]" "transformers>=4.51"
+WORKDIR /app
+COPY embedding_server.py .
+CMD ["uvicorn", "embedding_server:app", "--host", "0.0.0.0", "--port", "8001"]
