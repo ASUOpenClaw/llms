@@ -1,0 +1,46 @@
+services:
+    vllm:
+        image: ghcr.io/jajmangold/vllm-sm70:0.18.1
+        container_name: vllm
+        restart: unless-stopped
+        environment:
+            - HF_TOKEN=${HF_TOKEN:-}
+            - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+        volumes:
+            - hf_cache:/root/.cache/huggingface
+        networks:
+            - openclaw-net
+        # V100 (sm70): no FP8, no BF16 — use float16 explicitly.
+        # 9B FP16 ≈ 18 GB; remaining ~11 GB for KV cache → ~65k tokens FP16.
+        # Raise max-model-len only if you have enough KV budget.
+        command: >
+            --model Qwen/Qwen3.5-9B
+            --port 8000
+            --served-model-name qwen3
+            --dtype float16
+            --max-model-len 65536
+            --gpu-memory-utilization 0.92
+            --trust-remote-code
+            --enable-auto-tool-choice
+            --tool-call-parser hermes
+            --api-key ${BACKEND_API_KEY}
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          capabilities: [gpu]
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 120s
+
+volumes:
+    hf_cache:
+        driver: local
+
+networks:
+    openclaw-net:
+        external: true

@@ -1,12 +1,7 @@
 services:
-    # ─────────────────────────────────────────────────────────────────────────
-    # docling-serve — document parsing & OCR
-    # Handles PDF (layout + scanned), DOCX, XLSX, images.
-    # GPU accelerates OCR and layout models significantly.
-    # API: POST /v1alpha/convert/source  →  markdown output
-    # ─────────────────────────────────────────────────────────────────────────
     docling:
-        image: ghcr.io/docling-project/docling-serve-cu130:main
+        # GPU version (cu130, requires SM75+): ghcr.io/docling-project/docling-serve-cu130:main
+        image: ghcr.io/docling-project/docling-serve:main
         container_name: docling
         restart: unless-stopped
         ports:
@@ -16,6 +11,8 @@ services:
             - DOCLING_SERVE_API_KEY=${BACKEND_API_KEY}
         volumes:
             - docling_cache:/root/.cache
+        networks:
+            - openclaw-net
         healthcheck:
             test: ["CMD", "curl", "-sf", "http://localhost:5001/health"]
             interval: 30s
@@ -26,3 +23,7 @@ services:
 volumes:
     docling_cache:
         driver: local
+
+networks:
+    openclaw-net:
+        external: true

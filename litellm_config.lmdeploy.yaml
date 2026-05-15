@@ -1,18 +1,11 @@
-# This file is kept as the default fallback referenced by docker-compose.litellm.yml
-# when LITELLM_CONFIG is not set. Use provider-specific configs via the Makefile:
-#
-#   litellm_config.vllm.yaml      — vLLM backend
-#   litellm_config.ollama.yaml    — Ollama backend
-#   litellm_config.lmdeploy.yaml  — LMDeploy backend
-#
-# Redirect to vllm config as default:
 model_list:
-    # ── Chat — Qwen3-8B-AWQ via vLLM ──────────────────────────────────────
+    # ── Chat — Qwen3-14B-AWQ via LMDeploy (TurboMind) ─────────────────────
     - model_name: qwen3
       litellm_params:
           model: openai/qwen3
-          api_base: http://vllm:8000/v1
+          api_base: http://lmdeploy:23333/v1
           api_key: os.environ/BACKEND_API_KEY
+          extra_body: {}
       model_info:
           mode: chat
 
@@ -49,3 +42,4 @@ general_settings:
 litellm_settings:
     drop_params: true
     request_timeout: 600
+    max_tokens: 4096

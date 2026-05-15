@@ -1,0 +1,30 @@
+services:
+    embedding:
+        build:
+            context: .
+            dockerfile: Dockerfile.embedding
+        container_name: embedding
+        restart: unless-stopped
+        environment:
+            - HF_TOKEN=${HF_TOKEN:-}
+            - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+            - MODEL_ID=Qwen/Qwen3-Embedding-4B
+            - API_KEY=${BACKEND_API_KEY}
+        volumes:
+            - hf_cache:/root/.cache/huggingface
+        networks:
+            - openclaw-net
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 120s
+
+volumes:
+    hf_cache:
+        driver: local
+
+networks:
+    openclaw-net:
+        external: true

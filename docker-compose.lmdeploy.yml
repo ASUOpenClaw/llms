@@ -1,0 +1,41 @@
+services:
+    lmdeploy:
+        image: openmmlab/lmdeploy:latest
+        container_name: lmdeploy
+        restart: unless-stopped
+        ipc: host
+        networks:
+            - openclaw-net
+        environment:
+            - API_KEY=${BACKEND_API_KEY}
+            - HF_TOKEN=${HF_TOKEN:-}
+            - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+        volumes:
+            - hf_cache:/root/.cache/huggingface
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
+        command: >
+            lmdeploy serve api_server Qwen/Qwen3.5-9B
+            --model-name qwen3
+            --backend turbomind
+            --dtype float16
+            --session-len 100000
+            --cache-max-entry-count 0.50
+            --quant-policy 8
+            --max-batch-size 8
+            --tool-call-parser internlm
+            --reasoning-parser default
+            --server-port 23333
+
+volumes:
+    hf_cache:
+        driver: local
+
+networks:
+    openclaw-net:
+        external: true

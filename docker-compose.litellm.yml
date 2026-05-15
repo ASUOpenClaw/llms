@@ -1,7 +1,4 @@
 services:
-    # ─────────────────────────────────────────────
-    # PostgreSQL — LiteLLM admin UI persistence
-    # ─────────────────────────────────────────────
     postgres:
         image: postgres:16-alpine
         container_name: litellm-postgres
@@ -23,15 +20,12 @@ services:
             retries: 5
             start_period: 20s
 
-    # ─────────────────────────────────────────────
-    # LiteLLM — unified proxy + admin UI
-    # ─────────────────────────────────────────────
     litellm:
         image: ghcr.io/berriai/litellm:main-latest
         container_name: litellm
         restart: unless-stopped
         volumes:
-            - ./litellm_config.yaml:/app/config.yaml:ro
+            - ${LITELLM_CONFIG:-./litellm_config.lmdeploy.yaml}:/app/config.yaml:ro
         ports:
             - "4000:4000"
         command: ["--config", "/app/config.yaml", "--port", "4000"]
@@ -39,10 +33,7 @@ services:
             - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:?LITELLM_MASTER_KEY is required}
             - LITELLM_SALT_KEY=${LITELLM_SALT_KEY:?LITELLM_SALT_KEY is required}
             - DATABASE_URL=postgresql://${POSTGRES_USER:-litellm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-litellm}
-            - VLLM_HOST=${VLLM_HOST}
-            - SPEACHES_HOST=${SPEACHES_HOST}
             - BACKEND_API_KEY=${BACKEND_API_KEY}
-            # Admin UI credentials
             - UI_USERNAME=${UI_USERNAME:-admin}
             - UI_PASSWORD=${UI_PASSWORD:?UI_PASSWORD is required}
         depends_on:
