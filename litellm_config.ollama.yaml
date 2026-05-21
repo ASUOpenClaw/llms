@@ -5,6 +5,9 @@ model_list:
           model: ollama_chat/qwen3
           api_base: http://ollama:11434
           api_key: os.environ/BACKEND_API_KEY
+          max_tokens: 8192
+          extra_body:
+              think: true
       model_info:
           mode: chat
 
