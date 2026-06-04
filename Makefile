@@ -11,9 +11,9 @@ ALL_FILES := \
 	-f docker-compose.litellm.yml
 
 .PHONY: network \
-        vllm ollama lmdeploy \
+        vllm ollama lmdeploy lmstudio \
         embeddings speaches docling \
-        all-vllm all-ollama all-lmdeploy \
+        all-vllm all-ollama all-lmdeploy all-lmstudio \
         down ps logs pull
 
 # ── Prerequisite ───────────────────────────────────────────────────────────
@@ -49,6 +49,11 @@ lmdeploy: network
 	$(DC) -f docker-compose.lmdeploy.yml \
 	      -f docker-compose.litellm.yml up -d $(ARGS)
 
+lmstudio: network
+	LITELLM_CONFIG=./litellm_config.lmstudio.yaml \
+	$(DC) -f docker-compose.lmstudio.yml \
+	      -f docker-compose.litellm.yml up -d $(ARGS)
+
 # ── Full stack: LLM + embeddings + speaches + docling + litellm ───────────
 all-vllm: network
 	LITELLM_CONFIG=./litellm_config.vllm.yaml \
@@ -74,6 +79,14 @@ all-lmdeploy: network
 	      -f docker-compose.docling.yml \
 	      -f docker-compose.litellm.yml up -d $(ARGS)
 
+all-lmstudio: network
+	LITELLM_CONFIG=./litellm_config.lmstudio.yaml \
+	$(DC) -f docker-compose.lmstudio.yml \
+	      -f docker-compose.embeddings.yml \
+	      -f docker-compose.speaches.yml \
+	      -f docker-compose.docling.yml \
+	      -f docker-compose.litellm.yml up -d $(ARGS)
+
 # ── Management ─────────────────────────────────────────────────────────────
 down:
 	$(DC) $(ALL_FILES) down $(ARGS)
@@ -89,11 +102,13 @@ help:
 	@echo "  make vllm        — vLLM (Qwen3-8B-AWQ) + LiteLLM"
 	@echo "  make ollama      — Ollama (Qwen3 128k) + LiteLLM"
 	@echo "  make lmdeploy    — LMDeploy (Qwen3-14B-AWQ) + LiteLLM"
+	@echo "  make lmstudio    — LM Studio (host:1234) + LiteLLM"
 	@echo ""
 	@echo "Full stack (LLM + embeddings + speaches + docling + litellm):"
 	@echo "  make all-vllm"
 	@echo "  make all-ollama"
 	@echo "  make all-lmdeploy"
+	@echo "  make all-lmstudio"
 	@echo ""
 	@echo "Individual components:"
 	@echo "  make embeddings  — embedding server only"

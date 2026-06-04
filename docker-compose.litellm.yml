@@ -34,6 +34,7 @@ services:
             - LITELLM_SALT_KEY=${LITELLM_SALT_KEY:?LITELLM_SALT_KEY is required}
             - DATABASE_URL=postgresql://${POSTGRES_USER:-litellm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-litellm}
             - BACKEND_API_KEY=${BACKEND_API_KEY}
+
             - UI_USERNAME=${UI_USERNAME:-admin}
             - UI_PASSWORD=${UI_PASSWORD:?UI_PASSWORD is required}
         depends_on:

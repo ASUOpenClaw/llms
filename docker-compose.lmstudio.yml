@@ -1,0 +1,32 @@
+services:
+    lmstudio:
+        image: ghcr.io/lucathehacker/lmstudio-container:latest
+        container_name: lmstudio
+        restart: unless-stopped
+        volumes:
+            - lmstudio_data:/data
+        environment:
+            - LMS_PORT=1234
+            - LMS_SERVER_HOST=0.0.0.0
+            # Space-separated list of models to download on first boot
+            - LMS_PREFETCH=${LMS_PREFETCH:-}
+            # Model to load into memory at startup (fast first request)
+            - LMS_LOAD=${LMS_LOAD:-}
+        networks:
+            - openclaw-net
+        # Uncomment to enable NVIDIA GPU (requires NVIDIA Container Toolkit on host)
+        # deploy:
+        #     resources:
+        #         reservations:
+        #             devices:
+        #                 - driver: nvidia
+        #                   count: all
+        #                   capabilities: [gpu]
+
+volumes:
+    lmstudio_data:
+        driver: local
+
+networks:
+    openclaw-net:
+        external: true
