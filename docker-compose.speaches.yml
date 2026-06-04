@@ -1,22 +1,22 @@
 services:
     speaches:
-        image: ghcr.io/speaches-ai/speaches:latest-cpu # latest-cuda for GPU
+        image: ghcr.io/speaches-ai/speaches:latest-cuda
         container_name: speaches
         restart: unless-stopped
         environment:
             - WHISPER__TTL=-1
-            # - WHISPER__INFERENCE_DEVICE=cuda
-            # - WHISPER__COMPUTE_TYPE=float16
+            - WHISPER__INFERENCE_DEVICE=cuda
+            - WHISPER__COMPUTE_TYPE=float16
         volumes:
             - speaches_cache:/home/ubuntu/.cache/huggingface/hub
         networks:
             - openclaw-net
-        # deploy:
-        #     resources:
-        #         reservations:
-        #             devices:
-        #                 - driver: nvidia
-        #                   capabilities: [gpu]
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          capabilities: [gpu]
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
             interval: 30s
@@ -25,7 +25,7 @@ services:
             start_period: 60s
 
     speaches-pull:
-        image: ghcr.io/speaches-ai/speaches:latest-cpu
+        image: ghcr.io/speaches-ai/speaches:latest-cuda
         container_name: speaches-pull
         restart: no
         entrypoint:

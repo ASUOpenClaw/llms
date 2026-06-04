@@ -51,8 +51,7 @@ lmdeploy: network
 
 lmstudio: network
 	LITELLM_CONFIG=./litellm_config.lmstudio.yaml \
-	$(DC) -f docker-compose.lmstudio.yml \
-	      -f docker-compose.litellm.yml up -d $(ARGS)
+	$(DC) -f docker-compose.litellm.yml up -d $(ARGS)
 
 # ── Full stack: LLM + embeddings + speaches + docling + litellm ───────────
 all-vllm: network
@@ -81,8 +80,7 @@ all-lmdeploy: network
 
 all-lmstudio: network
 	LITELLM_CONFIG=./litellm_config.lmstudio.yaml \
-	$(DC) -f docker-compose.lmstudio.yml \
-	      -f docker-compose.embeddings.yml \
+	$(DC) -f docker-compose.embeddings.yml \
 	      -f docker-compose.speaches.yml \
 	      -f docker-compose.docling.yml \
 	      -f docker-compose.litellm.yml up -d $(ARGS)

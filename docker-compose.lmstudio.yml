@@ -3,15 +3,22 @@ services:
         image: ghcr.io/lucathehacker/lmstudio-container:latest
         container_name: lmstudio
         restart: unless-stopped
+        entrypoint: ["/usr/bin/tini", "--", "/lmstudio-entrypoint.sh"]
         volumes:
             - lmstudio_data:/data
+            - ./lmstudio-entrypoint.sh:/lmstudio-entrypoint.sh:ro
         environment:
             - LMS_PORT=1234
             - LMS_SERVER_HOST=0.0.0.0
-            # Space-separated list of models to download on first boot
+            # Model to download on first boot (HuggingFace path, @Q4_K_M to pin quantization)
             - LMS_PREFETCH=${LMS_PREFETCH:-}
-            # Model to load into memory at startup (fast first request)
+            # Model key to load into memory (from lms ls)
             - LMS_LOAD=${LMS_LOAD:-}
+            # Load parameters
+            - LMS_CONTEXT_LENGTH=${LMS_CONTEXT_LENGTH:-}
+            - LMS_GPU=${LMS_GPU:-max}
+            # API identifier — used as model name in /v1/models and litellm config
+            - LMS_IDENTIFIER=${LMS_IDENTIFIER:-}
         networks:
             - openclaw-net
         # Uncomment to enable NVIDIA GPU (requires NVIDIA Container Toolkit on host)

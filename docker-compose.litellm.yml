@@ -37,6 +37,8 @@ services:
 
             - UI_USERNAME=${UI_USERNAME:-admin}
             - UI_PASSWORD=${UI_PASSWORD:?UI_PASSWORD is required}
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         depends_on:
             postgres:
                 condition: service_healthy
